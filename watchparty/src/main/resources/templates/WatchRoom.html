@@ -1,0 +1,335 @@
+<html>
+<head>
+    <title>WatchRoom</title>
+
+    <!-- Henry CSS	-->
+    <link rel="stylesheet" type="text/css" media="screen"
+          href="/css/Homepage.css">
+
+    <!--Tinder Swipe CSS-->
+    <link rel="stylesheet" href="/css/vote-popup.css">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+
+    <!-- SOCK JS include -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.js"></script>
+
+    <!-- STOMP JS include -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script defer src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
+
+    <!--Firestore Include-->
+    <script defer src="https://www.gstatic.com/firebasejs/7.17.1/firebase-firestore.js"></script>
+
+    <!--Make certain util vars/funcs avaialable to all files-->
+    <script type="text/javascript" src="/js/watchroom/global-needs.js"></script>
+
+    <!-- Websockets -->
+    <script type="text/javascript" src="/js/watchroom/room-sockets.js"></script>
+
+    <!-- Youtube API Handlers-->
+    <script src="/js/watchroom/syncplayer.js"></script>
+
+    <!--Henry's Original Javascript-->
+    <script src="/js/watchroom/Homepage.js"></script>
+
+    <!--James Script addition-->
+    <script>
+    	function onloadAction() {
+	    	console.log("in onload");
+	    	if (sessionStorage.getItem("username") === null) {
+	    		document.getElementById("create-room-div").style.display = "none";
+
+	    		document.getElementById("join-room-div").style.display = "none";
+	    		document.getElementById("logout").style.display = "none";
+	   		} else {
+	   			document.getElementById("my-priv-room-text").style.display = "none";
+	   		}
+	    }
+
+
+        function loadUrl(){
+            var leaveRoom = document.querySelector("#leaveRoom");
+            leaveRoom.href = "https://www.google.com";
+            var logout = document.querySelector("#logout");
+            logout.href = "http://localhost:63342/watchparty/templates/Login.html?_ijt=ocbtbdjkoolgb93le2ne1p6aar";
+        }
+
+        function change()
+        {
+            if(document.getElementById("room-list").style.visibility=="visible")
+            {
+                document.getElementById("room-list").style.visibility="hidden";
+            }
+            else
+            {
+                document.getElementById("room-list").style.visibility="visible";
+            }
+        }
+
+        function logout() {
+        	sessionStorage.clear();
+        }
+
+    </script>
+
+    <!-- Thymeleaf to Javascript -->
+    <script>
+        let currentVideoId = "[[${currentVideoId}]]";
+    </script>
+
+
+
+</head>
+<body onLoad="onloadAction()">
+<div id="general-container">
+    <div id="top-left-container" onclick="change();">
+        <p id="leftheader">Room</p>
+    </div>
+    <div id="room-list">
+        <div class="seperation">
+            <p> Public Rooms</p>
+        </div>
+        <div class="room">
+            <img src="" alt="Icon">
+            <div class="title-text">
+                Tom and Jerry
+            </div>
+            <a href="/room/tom-and-jerry" class="enterbutton" type="button">Enter</a>
+        </div>
+        <div class="room">
+            <img src="" alt="Icon">
+            <div class="title-text">
+                NFL
+            </div>
+            <a href="/room/nfl" class="enterbutton" type="button">Enter</a>
+        </div>
+        <div class="room">
+            <img src="" alt="Icon">
+            <div class="title-text">
+                CSCI
+            </div>
+            <a href="/room/csci" class="enterbutton" type="button">Enter</a>
+        </div>
+        <div class="room">
+            <img src="" alt="Icon">
+            <div class="title-text">
+                CNN
+            </div>
+            <a href="/room/cnn" class="enterbutton" type="button">Enter</a>
+        </div>
+
+        <div id="create-room-div" class="bigbutton-container">
+            <button id="create-room-btn"class="bigbutton" type="button">Create Room</button>
+            <div id="pop-up-box-container-create"> </div>
+            <div id="pop-up-box-create">
+                <div id="pop-up-header-create"> Create a Private Room?</div>
+                <div id="pop-up-body-create"> </div>
+                <div id="pop-up-footer-create">
+                    <button onclick="popupOkCreate()">OK</button>
+                    <button onclick="popupCancelCreate()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="bottom-left-container">
+        <div id="pop-up-box-container-logout"> </div>
+        <div id="pop-up-box-logout">
+            <div id="pop-up-header-logout"> Log out?</div>
+            <div id="pop-up-body-logout"> </div>
+            <div id="pop-up-footer-logout">
+                <button onclick="popupOkLogout()">OK</button>
+                <button onclick="popupCancelLogout()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="title">
+        <span>Video</span>
+    </div>
+    <div id="video-container">
+        <div id="player"></div>
+
+        <div id="progressBar">
+            <div id="line"></div>
+            <div id="scrubber"></div>
+        </div>
+
+
+        <div id='player-controls'>
+            <button type="button" class="btn btn-success" id="playButton">Play</button>
+            <button type="button" class="btn btn-danger" id="pauseButton">Pause</button>
+        </div>
+
+
+
+    </div>
+    <div id="vote-container">
+        <div id="vote">
+            <input type="text" placeholder="Search video by keywords" id="yt-searchbar">
+        </div>
+        <button class="searchbutton" type="button" id="yt-search-btn">Search</button>
+        <div id="pop-up-box-container-search"> </div>
+        <div id="pop-up-box-search">
+            <div id="pop-up-header-search">Add to Queue</div>
+
+            <h3 id="add-to-queue-notification" style="color:red">
+                <!-- Success/Error Message Goes here -->
+            </h4>
+
+            <div id="pop-up-body-search">
+
+            </div>
+
+
+            <div id="pop-up-footer-search">
+                <button onclick="popupCancelSearch()">Cancel</button>
+            </div>
+        </div>
+
+        <!--Voting Pop Up-->
+        <div id="pop-up-box-vote">
+            <div id="pop-up-header-vote">Vote For Up Next</div>
+
+
+            <div id="pop-up-body-vote">
+
+            </div>
+
+            <div class="demo">
+                <header class="demo__header"></header>
+                <div class="demo__content">
+                    <div class="demo__card-cont">
+                        <div class="demo__card">
+                            <div class="demo__card__top brown">
+                                <div class="demo__card__img"></div>
+                                <p class="demo__card__name">Hungry cat 6</p>
+                            </div>
+                            <div class="demo__card__btm">
+                                <p class="demo__card__we">Whatever</p>
+                            </div>
+                            <div class="demo__card__choice m--reject"></div>
+                            <div class="demo__card__choice m--like"></div>
+                            <div class="demo__card__drag"></div>
+                        </div>
+                        <div class="demo__card">
+                            <div class="demo__card__top lime">
+                                <div class="demo__card__img"></div>
+                                <p class="demo__card__name">Hungry cat 5</p>
+                            </div>
+                            <div class="demo__card__btm">
+                                <p class="demo__card__we">Whatever</p>
+                            </div>
+                            <div class="demo__card__choice m--reject"></div>
+                            <div class="demo__card__choice m--like"></div>
+                            <div class="demo__card__drag"></div>
+                        </div>
+                        <div class="demo__card">
+                            <div class="demo__card__top cyan">
+                                <div class="demo__card__img"></div>
+                                <p class="demo__card__name">Hungry cat 4</p>
+                            </div>
+                            <div class="demo__card__btm">
+                                <p class="demo__card__we">Whatever</p>
+                            </div>
+                            <div class="demo__card__choice m--reject"></div>
+                            <div class="demo__card__choice m--like"></div>
+                            <div class="demo__card__drag"></div>
+                        </div>
+                        <div class="demo__card">
+                            <div class="demo__card__top indigo">
+                                <div class="demo__card__img"></div>
+                                <p class="demo__card__name">Hungry cat 3</p>
+                            </div>
+                            <div class="demo__card__btm">
+                                <p class="demo__card__we">Whatever</p>
+                            </div>
+                            <div class="demo__card__choice m--reject"></div>
+                            <div class="demo__card__choice m--like"></div>
+                            <div class="demo__card__drag"></div>
+                        </div>
+                        <div class="demo__card">
+                            <div class="demo__card__top blue">
+                                <div class="demo__card__img"></div>
+                                <p class="demo__card__name">Hungry cat 2</p>
+                            </div>
+                            <div class="demo__card__btm">
+                                <p class="demo__card__we">Whatever</p>
+                            </div>
+                            <div class="demo__card__choice m--reject"></div>
+                            <div class="demo__card__choice m--like"></div>
+                            <div class="demo__card__drag"></div>
+                        </div>
+                        <div class="demo__card">
+                            <div class="demo__card__top purple">
+                                <div class="demo__card__img"></div>
+                                <p class="demo__card__name">Hungry cat</p>
+                            </div>
+                            <div class="demo__card__btm">
+                                <p class="demo__card__we">Whatever</p>
+                            </div>
+                            <div class="demo__card__choice m--reject"></div>
+                            <div class="demo__card__choice m--like"></div>
+                            <div class="demo__card__drag"></div>
+                        </div>
+                    </div>
+                    <p class="demo__tip">Swipe left or right</p>
+                </div>
+            </div>
+
+
+
+
+
+
+
+            <div id="pop-up-footer-vote">
+                <button onclick="popupCancelVote()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="top-right-container">
+        <p id="rightheader">Message</p>
+    </div>
+    <div id="chat-message-list">
+        <div class="your-message">
+            <div class="message-person">Me</div>
+            <div class="message-text">Yes</div>
+            <div class="message-time">August 2</div>
+        </div>
+        <div class="other-message">
+            <div class="message-person">James</div>
+            <div class="message-text">Hello</div>
+            <div class="message-time">August 2</div>
+        </div>
+    </div>
+
+    <div id="bottom-right-container">
+        <div id="chat" >
+            <input id="chat-message-field" type="text" placeholder="Type a message">
+        </div>
+        <button id="chat-send-btn"class="sendbutton" type="button">Send</button>
+
+    </div>
+</div>
+<body>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+<!--Script for Searching & Voting Functionality-->
+<script src="/js/watchroom/add-to-queue.js" defer></script>
+
+
+<script src="/js/watchroom/tinder-swipe.js" defer></script>
+<script src="/js/watchroom/chat.js" defer></script>
+
+<script src="/js/create-room.js"></script>
+
+</html>
